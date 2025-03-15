@@ -86,8 +86,7 @@ void print_word_ladder(const vector<string>& sequence) {
         if (i > 0) cout << " ";
         cout << sequence[i];
     }
-    cout << " \n";  
-    cout << "Total cost is " << (sequence.size() - 1) << endl;
+    cout << " \n"; 
 }
 
 #define check_assert(condition) cout << #condition << (condition ? " valid" : " invalid") << endl;

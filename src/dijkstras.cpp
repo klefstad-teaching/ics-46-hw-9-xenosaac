@@ -1,110 +1,55 @@
-#include "ladder.h"
+#include "dijkstras.h"
 #include <algorithm>
-#include <unordered_set>
-#include <iterator>
+#include <stack>
 
-void error(string wordA, string wordB, string msg) {
-    cout << "Error: " << msg << " between words: " << wordA << " and " << wordB << endl;
-}
+vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& previous) {
+    vector<int> min_distance(G.numVertices, INF);
+    min_distance[source] = 0;
+    previous.assign(G.numVertices, -1);
 
-bool edit_distance_within(const string& s1, const string& s2, int threshold) {
-    if (s1 == s2) return true;
-    
-    const int lenA = s1.length(), lenB = s2.length();
-    if (abs(lenA - lenB) > threshold) return false;
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> vertex_queue;
+    vertex_queue.emplace(0, source);
 
-    int idx1 = 0, idx2 = 0;
-    bool has_discrepancy = false;
+    while (!vertex_queue.empty()) {
+        auto [dist, u] = vertex_queue.top();
+        vertex_queue.pop();
 
-    while (idx1 < lenA || idx2 < lenB) {
-        bool chars_match = (idx1 < lenA && idx2 < lenB && s1[idx1] == s2[idx2]);
-        
-        if (chars_match) {
-            ++idx1;
-            ++idx2;
-            continue;
-        }
-        
-        if (has_discrepancy) return false;
-        has_discrepancy = true;
+        if (dist > min_distance[u]) continue;
 
-        if (lenA > lenB) ++idx1;
-        else if (lenB > lenA) ++idx2;
-        else { ++idx1; ++idx2; }
-    }
-    return has_discrepancy;
-}
+        for (const Edge& e : G[u]) {
+            int v = e.dst, weight = e.weight;
+            int new_dist = dist + weight;
 
-bool is_adjacent(const string& first, const string& second) {
-    return edit_distance_within(first, second, 1);
-}
-
-vector<string> generate_word_ladder(const string& start, const string& end, const set<string>& wordbank) {
-    deque<vector<string>> ladder_queue;
-    ladder_queue.emplace_back(1, start);
-    
-    unordered_set<string> visitedWords{start};
-
-    for (; !ladder_queue.empty(); ladder_queue.pop_front()) {
-        const auto current_path = ladder_queue.front();
-        const string& last_word = current_path.back();
-
-        for (auto it = wordbank.begin(); it != wordbank.end(); ++it) {
-            const string& candidate = *it;
-            
-            if (!is_adjacent(last_word, candidate)) continue;
-            if (visitedWords.count(candidate)) continue;
-            
-            visitedWords.insert(candidate);
-            vector<string> new_path(current_path);
-            new_path.emplace_back(candidate);
-
-            if (candidate == end) return new_path;
-            
-            ladder_queue.emplace_back(move(new_path));
+            if (new_dist < min_distance[v]) {
+                min_distance[v] = new_dist;
+                previous[v] = u;
+                vertex_queue.emplace(new_dist, v);
+            }
         }
     }
-    return vector<string>{};
+    return min_distance;
 }
 
-void load_words(set<string>& lexicon, const string& filename) {
-    ifstream input_file(filename);
-    string line;
-    while (getline(input_file, line)) {
-        if (!line.empty()) lexicon.insert(line);
+vector<int> extract_shortest_path(const vector<int>& distances, const vector<int>& previous, int destination) {
+    vector<int> path;
+    for (int at = destination; at != -1; at = previous[at]) {
+        path.push_back(at);
     }
+    reverse(path.begin(), path.end());
+
+    if (!path.empty()) {
+        print_path(path, distances[destination]);
+    }
+    return path;
 }
 
-void print_word_ladder(const vector<string>& path) {
+void print_path(const vector<int>& path, int total_cost) {
     if (path.empty()) {
-        cout << "No word ladder found.\n";
+        cout << "\nTotal cost is " << total_cost << endl;
         return;
     }
-    
-    cout << "Word ladder found: " << path.front();
-    for (auto it = next(path.begin()); it != path.end(); ++it) {
-        cout << ' ' << *it;
+    for (size_t i = 0; i < path.size(); ++i) {
+        cout << path[i] << " ";
     }
-    cout << " \n";
-}
-
-#define verify_condition(expr) cout << #expr << (expr ? " valid" : " invalid") << '\n'
-
-void verify_word_ladder() {
-    set<string> lexicon;
-    load_words(lexicon, "words.txt");
-
-    const vector<tuple<string, string, size_t>> testCases = {
-        {"cat", "dog", 4},
-        {"marty", "curls", 6},
-        {"code", "data", 6},
-        {"work", "play", 6},
-        {"sleep", "awake", 8},
-        {"car", "cheat", 4}
-    };
-
-    for (const auto& [start, end, expected] : testCases) {
-        const auto result = generate_word_ladder(start, end, lexicon);
-        verify_condition(result.size() == expected);
-    }
+    cout << "\nTotal cost is " << total_cost << endl;
 }

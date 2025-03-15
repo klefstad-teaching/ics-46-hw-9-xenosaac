@@ -77,13 +77,17 @@ void load_words(set<string>& dictionary, const string& filename) {
 
 void print_word_ladder(const vector<string>& sequence) {
     if (sequence.empty()) {
-        cout << "No path exists\n";
+        cout << "No word ladder found.\n";
         return;
     }
+    
+    cout << "Word ladder found: ";
     for (size_t i = 0; i < sequence.size(); ++i) {
-        cout << sequence[i] << " ";
+        if (i > 0) cout << " ";
+        cout << sequence[i];
     }
-    cout << "\nTotal cost is " << (sequence.size() - 1) << endl;
+    cout << " \n";  
+    cout << "Total cost is " << (sequence.size() - 1) << endl;
 }
 
 #define check_assert(condition) cout << #condition << (condition ? " valid" : " invalid") << endl;

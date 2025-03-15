@@ -10,24 +10,20 @@ vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& prev
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> vertex_queue;
     vertex_queue.emplace(0, source);
 
-    for (; !vertex_queue.empty(); vertex_queue.pop()) {
-        auto current_node = vertex_queue.top();
-        int current_dist = current_node.first;
-        int u = current_node.second;
+    while (!vertex_queue.empty()) {
+        auto [dist, u] = vertex_queue.top();
+        vertex_queue.pop();
 
-        if (current_dist > min_distance[u]) continue;
+        if (dist > min_distance[u]) continue;
 
-        auto edges_begin = G[u].begin();
-        auto edges_end = G[u].end();
-        for (auto edge_it = edges_begin; edge_it != edges_end; ++edge_it) {
-            const Edge& e = *edge_it;
-            int v = e.dst;
-            int alt_path = current_dist + e.weight;
-            
-            if (alt_path < min_distance[v]) {
-                min_distance[v] = alt_path;
+        for (const Edge& e : G[u]) {
+            int v = e.dst, weight = e.weight;
+            int new_dist = dist + weight;
+
+            if (new_dist < min_distance[v]) {
+                min_distance[v] = new_dist;
                 previous[v] = u;
-                vertex_queue.emplace(alt_path, v);
+                vertex_queue.emplace(new_dist, v);
             }
         }
     }
@@ -36,8 +32,8 @@ vector<int> dijkstra_shortest_path(const Graph& G, int source, vector<int>& prev
 
 vector<int> extract_shortest_path(const vector<int>& distances, const vector<int>& previous, int destination) {
     vector<int> path;
-    for (int current_node = destination; current_node != -1; current_node = previous[current_node]) {
-        path.emplace_back(current_node);
+    for (int at = destination; at != -1; at = previous[at]) {
+        path.push_back(at);
     }
     reverse(path.begin(), path.end());
 
@@ -49,13 +45,11 @@ vector<int> extract_shortest_path(const vector<int>& distances, const vector<int
 
 void print_path(const vector<int>& path, int total_cost) {
     if (path.empty()) {
-        cout << "Total cost is " << total_cost << endl;
+        cout << "\nTotal cost is " << total_cost << endl;
         return;
     }
-    
-    cout << path[0];
-    for (size_t i = 1; i < path.size(); ++i) {
-        cout << " " << path[i];
+    for (size_t i = 0; i < path.size(); ++i) {
+        cout << path[i] << " ";
     }
     cout << "\nTotal cost is " << total_cost << endl;
 }

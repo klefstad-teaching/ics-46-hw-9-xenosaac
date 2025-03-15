@@ -6,42 +6,35 @@ void error(string term1, string term2, string message) {
     cout << "Error: " << message << " between terms: " << term1 << " and " << term2 << endl;
 }
 
-bool within_edit_threshold(const string& s, const string& t, int max_diff) {
-    if (s == t) return true;
+bool edit_distance_within(const string& str1, const string& str2, int d) {
+    if (str1 == str2) return true;
     
-    int s_len = s.length(), t_len = t.length();
-    int length_diff = s_len - t_len;
-    if (abs(length_diff) > max_diff)
-        return false;
+    int len1 = str1.length();
+    int len2 = str2.length();
+    if (abs(len1 - len2) > d) return false;
 
     int i = 0, j = 0;
-    bool discrepancy_found = false;
+    bool found_diff = false;
 
-    do {
-        if (i < s_len && j < t_len && s[i] == t[j]) {
+    while (i < len1 || j < len2) {
+        if (i < len1 && j < len2 && str1[i] == str2[j]) {
             i++;
             j++;
             continue;
         }
         
-        if (discrepancy_found) return false;
-        discrepancy_found = true;
+        if (found_diff) return false;
+        found_diff = true;
         
-        if (s_len == t_len) {
-            i++;
-            j++;
-        } else if (s_len > t_len) {
-            i++;
-        } else {
-            j++;
-        }
-    } while (i < s_len || j < t_len);
-
-    return discrepancy_found;
+        if (len1 == len2) { i++; j++; }
+        else if (len1 > len2) i++;
+        else j++;
+    }
+    return found_diff;
 }
 
 bool is_adjacent(const string& term1, const string& term2) {
-    return within_edit_threshold(term1, term2, 1);
+    return edit_distance_within(term1, term2, 1);
 }
 
 vector<string> generate_word_ladder(const string& origin, const string& target, const set<string>& vocabulary) {
@@ -87,13 +80,10 @@ void print_word_ladder(const vector<string>& sequence) {
         cout << "No path exists\n";
         return;
     }
-    
-    cout << sequence[0];
-    for (size_t i = 1; i < sequence.size(); ++i) {
-        cout << " " << sequence[i];
+    for (size_t i = 0; i < sequence.size(); ++i) {
+        cout << sequence[i] << " ";
     }
-
-    cout << "\nTotal cost is " << (sequence.size() - 1) << '\n' << endl;
+    cout << "\nTotal cost is " << (sequence.size() - 1) << endl;
 }
 
 #define check_assert(condition) cout << #condition << (condition ? " valid" : " invalid") << endl;
@@ -101,25 +91,10 @@ void print_word_ladder(const vector<string>& sequence) {
 void verify_word_ladder() {
     set<string> dictionary;
     load_words(dictionary, "words.txt");
-
-    struct TestCase {
-        string start;
-        string end;
-        size_t expected_length;  
-    };
-
-    vector<TestCase> tests = {
-        {"cat", "dog", 4},
-        {"marty", "curls", 6},
-        {"code", "data", 6},
-        {"work", "play", 6},
-        {"sleep", "awake", 8},
-        {"car", "cheat", 4}
-    };
-
-    for (const auto& test : tests) {
-        vector<string> result = generate_word_ladder(test.start, test.end, dictionary);
-        print_word_ladder(result);
-        check_assert(result.size() == test.expected_length);
-    }
+    check_assert(generate_word_ladder("cat", "dog", dictionary).size() == 4);
+    check_assert(generate_word_ladder("marty", "curls", dictionary).size() == 6);
+    check_assert(generate_word_ladder("code", "data", dictionary).size() == 6);
+    check_assert(generate_word_ladder("work", "play", dictionary).size() == 6);
+    check_assert(generate_word_ladder("sleep", "awake", dictionary).size() == 8);
+    check_assert(generate_word_ladder("car", "cheat", dictionary).size() == 4);
 }
